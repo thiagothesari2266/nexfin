@@ -1,0 +1,171 @@
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { z } from "zod";
+import { X } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import type { Account } from "@shared/schema";
+
+const accountSchema = z.object({
+  name: z.string().min(1, "Nome é obrigatório"),
+  type: z.enum(["personal", "business"]),
+});
+
+interface AccountModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onAccountCreated: (account: Account) => void;
+}
+
+export default function AccountModal({ isOpen, onClose, onAccountCreated }: AccountModalProps) {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const form = useForm<z.infer<typeof accountSchema>>({
+    resolver: zodResolver(accountSchema),
+    defaultValues: {
+      name: "",
+      type: "personal",
+    },
+  });
+
+  const createAccountMutation = useMutation({
+    mutationFn: async (data: z.infer<typeof accountSchema>) => {
+      const response = await apiRequest('POST', '/api/accounts', data);
+      return response.json();
+    },
+    onSuccess: (newAccount: Account) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/accounts'] });
+      toast({
+        title: "Sucesso",
+        description: "Conta criada com sucesso",
+      });
+      form.reset();
+      onAccountCreated(newAccount);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Erro",
+        description: error.message || "Erro ao criar conta",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const onSubmit = (data: z.infer<typeof accountSchema>) => {
+    createAccountMutation.mutate(data);
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <div className="flex items-center justify-between">
+            <DialogTitle className="text-lg font-semibold text-slate-900">
+              Nova Conta
+            </DialogTitle>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onClose}
+              className="h-6 w-6 p-0"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        </DialogHeader>
+
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Nome da Conta</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Digite o nome da conta..." {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="type"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Tipo da Conta</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione o tipo" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="personal">Pessoal</SelectItem>
+                      <SelectItem value="business">Empresarial</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <div className="bg-slate-50 rounded-lg p-4 mt-4">
+              <div className="text-sm text-slate-700">
+                <strong>Pessoal:</strong> Para controle financeiro individual, despesas domésticas e orçamento pessoal.
+              </div>
+              <div className="text-sm text-slate-700 mt-2">
+                <strong>Empresarial:</strong> Inclui recursos avançados como controle por cliente, projeto e centro de custo.
+              </div>
+            </div>
+
+            <div className="flex space-x-3 pt-4">
+              <Button
+                type="button"
+                variant="outline"
+                className="flex-1"
+                onClick={onClose}
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="submit"
+                className="flex-1"
+                disabled={createAccountMutation.isPending}
+              >
+                {createAccountMutation.isPending ? "Criando..." : "Criar Conta"}
+              </Button>
+            </div>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
+  );
+}
