@@ -6,8 +6,9 @@ export function useCategories(accountId: number) {
   return useQuery({
     queryKey: ["/api/categories", accountId],
     queryFn: async () => {
-      const response = await apiRequest(`/api/categories?accountId=${accountId}`, {});
-      return response as Category[];
+      const response = await fetch(`/api/accounts/${accountId}/categories`);
+      if (!response.ok) throw new Error('Failed to fetch categories');
+      return response.json() as Category[];
     },
     enabled: !!accountId,
   });
@@ -29,11 +30,15 @@ export function useCreateCategory(accountId: number) {
   
   return useMutation({
     mutationFn: async (data: InsertCategory) => {
-      const response = await apiRequest("/api/categories", {
+      const response = await fetch(`/api/accounts/${accountId}/categories`, {
         method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify(data),
       });
-      return response as Category;
+      if (!response.ok) throw new Error('Failed to create category');
+      return response.json() as Category;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/categories", accountId] });

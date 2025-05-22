@@ -1,15 +1,15 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { insertCategorySchema, type InsertCategory, type Category } from "@shared/schema";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
+import { useCreateCategory, useUpdateCategory } from "@/hooks/useCategories";
 
 interface CategoryModalProps {
   isOpen: boolean;
@@ -44,187 +44,177 @@ const categoryColors = [
 
 export default function CategoryModal({ isOpen, onClose, accountId, category }: CategoryModalProps) {
   const { toast } = useToast();
-  const queryClient = useQueryClient();
   const [selectedColor, setSelectedColor] = useState(category?.color || categoryColors[0]);
   const [selectedIcon, setSelectedIcon] = useState(category?.icon || categoryIcons[0].value);
+  const [selectedType, setSelectedType] = useState<"income" | "expense">(category?.type || "expense");
+
+  const createMutation = useCreateCategory(accountId);
+  const updateMutation = useUpdateCategory();
 
   const form = useForm<InsertCategory>({
     resolver: zodResolver(insertCategorySchema),
     defaultValues: {
       name: category?.name || "",
+      type: category?.type || "expense",
       color: category?.color || categoryColors[0],
       icon: category?.icon || categoryIcons[0].value,
       accountId: accountId,
     },
   });
 
-  const createMutation = useMutation({
-    mutationFn: async (data: InsertCategory) => {
-      const response = await apiRequest(`/api/categories`, {
-        method: "POST",
-        body: JSON.stringify(data),
+  useEffect(() => {
+    if (category) {
+      form.reset({
+        name: category.name,
+        type: category.type,
+        color: category.color,
+        icon: category.icon,
+        accountId: accountId,
       });
-      return response;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/categories", accountId] });
-      toast({
-        title: "Sucesso!",
-        description: "Categoria criada com sucesso.",
+      setSelectedColor(category.color);
+      setSelectedIcon(category.icon);
+      setSelectedType(category.type);
+    } else {
+      form.reset({
+        name: "",
+        type: "expense",
+        color: categoryColors[0],
+        icon: categoryIcons[0].value,
+        accountId: accountId,
       });
-      onClose();
-      form.reset();
-    },
-    onError: () => {
-      toast({
-        title: "Erro",
-        description: "Não foi possível criar a categoria.",
-        variant: "destructive",
-      });
-    },
-  });
+      setSelectedColor(categoryColors[0]);
+      setSelectedIcon(categoryIcons[0].value);
+      setSelectedType("expense");
+    }
+  }, [category, accountId, form]);
 
-  const updateMutation = useMutation({
-    mutationFn: async (data: InsertCategory) => {
-      const response = await apiRequest(`/api/categories/${category?.id}`, {
-        method: "PATCH",
-        body: JSON.stringify(data),
-      });
-      return response;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/categories", accountId] });
-      toast({
-        title: "Sucesso!",
-        description: "Categoria atualizada com sucesso.",
-      });
-      onClose();
-    },
-    onError: () => {
-      toast({
-        title: "Erro",
-        description: "Não foi possível atualizar a categoria.",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const onSubmit = (data: InsertCategory) => {
+  const onSubmit = async (data: InsertCategory) => {
     const categoryData = {
       ...data,
       color: selectedColor,
       icon: selectedIcon,
+      type: selectedType,
       accountId: accountId,
     };
 
-    if (category) {
-      updateMutation.mutate(categoryData);
-    } else {
-      createMutation.mutate(categoryData);
+    try {
+      if (category) {
+        await updateMutation.mutateAsync({ id: category.id, ...categoryData });
+        toast({
+          title: "Categoria atualizada!",
+          description: `A categoria "${data.name}" foi atualizada com sucesso.`,
+        });
+      } else {
+        await createMutation.mutateAsync(categoryData);
+        toast({
+          title: "Categoria criada!",
+          description: `A categoria "${data.name}" foi criada com sucesso.`,
+        });
+      }
+      form.reset();
+      onClose();
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: category ? "Não foi possível atualizar a categoria." : "Não foi possível criar a categoria.",
+        variant: "destructive",
+      });
     }
   };
 
-  const handleClose = () => {
-    onClose();
-    form.reset();
-    setSelectedColor(categoryColors[0]);
-    setSelectedIcon(categoryIcons[0].value);
-  };
+  const isLoading = createMutation.isPending || updateMutation.isPending;
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-md">
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>
             {category ? "Editar Categoria" : "Nova Categoria"}
           </DialogTitle>
+          <DialogDescription>
+            {category ? "Atualize as informações da categoria." : "Crie uma nova categoria para organizar suas transações."}
+          </DialogDescription>
         </DialogHeader>
-        
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="name">Nome da Categoria</Label>
-            <Input
-              id="name"
-              {...form.register("name")}
-              placeholder="Ex: Alimentação, Transporte..."
-            />
-            {form.formState.errors.name && (
-              <p className="text-sm text-red-600">{form.formState.errors.name.message}</p>
-            )}
-          </div>
 
-          <div className="space-y-2">
-            <Label>Ícone</Label>
-            <div className="grid grid-cols-7 gap-2">
-              {categoryIcons.map((icon) => (
-                <button
-                  key={icon.value}
-                  type="button"
-                  onClick={() => setSelectedIcon(icon.value)}
-                  className={`p-2 rounded-lg border-2 transition-colors ${
-                    selectedIcon === icon.value
-                      ? "border-blue-500 bg-blue-50"
-                      : "border-gray-200 hover:border-gray-300"
-                  }`}
-                >
-                  <span className="text-lg">{icon.value}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label>Cor</Label>
-            <div className="grid grid-cols-8 gap-2">
-              {categoryColors.map((color) => (
-                <button
-                  key={color}
-                  type="button"
-                  onClick={() => setSelectedColor(color)}
-                  className={`w-8 h-8 rounded-full border-2 transition-all ${
-                    selectedColor === color
-                      ? "border-gray-800 scale-110"
-                      : "border-gray-300 hover:scale-105"
-                  }`}
-                  style={{ backgroundColor: color }}
-                />
-              ))}
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label>Prévia</Label>
-            <div className="flex items-center space-x-3 p-3 border rounded-lg bg-gray-50">
-              <div 
-                className="w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold"
-                style={{ backgroundColor: selectedColor }}
-              >
-                {selectedIcon}
-              </div>
-              <span className="font-medium">
-                {form.watch("name") || "Nome da categoria"}
-              </span>
-            </div>
-          </div>
-
-          <div className="flex justify-end space-x-2 pt-4">
-            <Button type="button" variant="outline" onClick={handleClose}>
-              Cancelar
-            </Button>
-            <Button 
-              type="submit" 
-              disabled={createMutation.isPending || updateMutation.isPending}
-            >
-              {createMutation.isPending || updateMutation.isPending ? (
-                "Salvando..."
-              ) : category ? (
-                "Atualizar"
-              ) : (
-                "Criar Categoria"
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Nome da Categoria</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Ex: Alimentação" {...field} />
+                  </FormControl>
+                </FormItem>
               )}
-            </Button>
-          </div>
-        </form>
+            />
+
+            <div className="space-y-2">
+              <Label>Tipo</Label>
+              <Select value={selectedType} onValueChange={(value: "income" | "expense") => setSelectedType(value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione o tipo" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="expense">Despesa</SelectItem>
+                  <SelectItem value="income">Receita</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Ícone</Label>
+              <Select value={selectedIcon} onValueChange={setSelectedIcon}>
+                <SelectTrigger>
+                  <SelectValue>
+                    <span className="flex items-center space-x-2">
+                      <span>{selectedIcon}</span>
+                      <span>{categoryIcons.find(icon => icon.value === selectedIcon)?.label}</span>
+                    </span>
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {categoryIcons.map((icon) => (
+                    <SelectItem key={icon.value} value={icon.value}>
+                      <span className="flex items-center space-x-2">
+                        <span>{icon.value}</span>
+                        <span>{icon.label}</span>
+                      </span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Cor</Label>
+              <div className="grid grid-cols-8 gap-2">
+                {categoryColors.map((color) => (
+                  <button
+                    key={color}
+                    type="button"
+                    className={`w-8 h-8 rounded-full border-2 ${
+                      selectedColor === color ? "border-gray-800" : "border-gray-300"
+                    }`}
+                    style={{ backgroundColor: color }}
+                    onClick={() => setSelectedColor(color)}
+                  />
+                ))}
+              </div>
+            </div>
+
+            <div className="flex justify-end space-x-2 pt-4">
+              <Button type="button" variant="outline" onClick={onClose} disabled={isLoading}>
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={isLoading}>
+                {isLoading ? "Salvando..." : category ? "Atualizar" : "Criar"}
+              </Button>
+            </div>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );
