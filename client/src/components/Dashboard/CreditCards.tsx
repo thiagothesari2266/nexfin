@@ -25,6 +25,7 @@ export default function CreditCards() {
   };
 
   const formatDueDate = (dueDate: number) => {
+    if (!dueDate) return '--/--';
     const now = new Date();
     const currentMonth = now.getMonth() + 1;
     const currentYear = now.getFullYear();
@@ -38,6 +39,7 @@ export default function CreditCards() {
   };
 
   const getBrandIcon = (brand: string) => {
+    if (!brand) return 'fas fa-credit-card';
     const brandLower = brand.toLowerCase();
     if (brandLower.includes('visa')) return 'fab fa-cc-visa';
     if (brandLower.includes('master')) return 'fab fa-cc-mastercard';
@@ -113,7 +115,7 @@ export default function CreditCards() {
                   </div>
                   <div className="text-right">
                     <div className="text-xs opacity-75">Vencimento</div>
-                    <div className="font-medium">{formatDueDate(card.dueDate)}</div>
+                    <div className="font-medium">{formatDueDate(card?.dueDate)}</div>
                   </div>
                 </div>
               </div>
