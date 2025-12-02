@@ -50,7 +50,7 @@ export default function LoginPage() {
           <CardDescription className="text-slate-600">
             {mode === "login"
               ? "Entre para visualizar e gerenciar seus dados financeiros."
-              : "Cadastre-se para começar a usar o Financial Tracker."}
+              : "Cadastre-se para começar a usar o Nexfin."}
           </CardDescription>
         </CardHeader>
         <CardContent>

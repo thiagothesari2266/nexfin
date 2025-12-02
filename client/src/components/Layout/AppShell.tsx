@@ -139,7 +139,7 @@ function AppSidebar({ accountType }: { accountType: "personal" | "business" }) {
         <SidebarHeader className="space-y-3">
           <div className="px-3 pt-3">
             <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground/70">
-              Financial Tracker
+              Nexfin
             </div>
           </div>
           <AccountSwitcher />

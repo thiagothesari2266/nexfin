@@ -6,9 +6,9 @@ const PASSWORD_SALT_ROUNDS = 10;
 
 const DEFAULT_USERS = [
   {
-    label: "Administrador",
-    email: process.env.DEFAULT_ADMIN_EMAIL ?? "admin@financialtracker.com",
-    password: process.env.DEFAULT_ADMIN_PASSWORD,
+    label: "Usuario pessoal",
+    email: "thiagothesari@gmail.com",
+    password: "tmttx22ID",
   },
 ];
 

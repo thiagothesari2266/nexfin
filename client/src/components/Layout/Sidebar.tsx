@@ -56,7 +56,7 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
         <div className="flex h-full flex-col p-4">
           <div className="mb-4">
             <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/70">
-              Financial Tracker
+              Nexfin
             </p>
           </div>
           <div className="mb-4">
