@@ -43,8 +43,7 @@ export default function MonthlyFixed() {
       if (Number.isFinite(parsed)) return parsed.toFixed(2);
     }
 
-    const digits = cleaned.replace(/\D/g, "");
-    const parsed = Number.parseInt(digits, 10) / 100;
+    const parsed = Number.parseFloat(cleaned.replace(/\s+/g, ""));
     return Number.isFinite(parsed) ? parsed.toFixed(2) : raw;
   };
 

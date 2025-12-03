@@ -43,11 +43,9 @@ const normalizeAmount = (value: unknown): string | undefined => {
     if (Number.isFinite(parsed)) return parsed.toFixed(2);
   }
 
-  // Fallback: manter apenas dígitos e assumir 2 casas decimais
-  const digits = raw.replace(/\D/g, "");
-  if (!digits) return undefined;
-  const asNumber = Number.parseInt(digits, 10) / 100;
-  return Number.isFinite(asNumber) ? asNumber.toFixed(2) : undefined;
+  // Sem separadores explícitos: interpretar como número inteiro ou decimal já no formato do usuário
+  const parsed = Number.parseFloat(raw.replace(/\s+/g, ""));
+  return Number.isFinite(parsed) ? parsed.toFixed(2) : undefined;
 };
 
 export async function registerRoutes(app: Express): Promise<Server> {
