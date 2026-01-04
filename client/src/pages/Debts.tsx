@@ -12,7 +12,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { BadgePercent, CalendarDays, Clock3, PiggyBank, Plus, Pencil, Trash2 } from 'lucide-react';
+import { BadgePercent, CalendarDays, Clock3, Download, PiggyBank, Plus, Pencil, Trash2 } from 'lucide-react';
 import type { Debt, DebtRatePeriod, InsertDebt } from '@shared/schema';
 import { DebtModal, type DebtFormValues } from '@/components/Modals/DebtModal';
 import { useToast } from '@/hooks/use-toast';
@@ -126,6 +126,39 @@ export default function Debts() {
     }
   };
 
+  const handleExportCSV = () => {
+    if (debts.length === 0) {
+      toast({ title: 'Nenhuma dívida para exportar', variant: 'destructive' });
+      return;
+    }
+
+    const headers = ['Nome', 'Tipo', 'Saldo', 'Juros', 'Período', 'Data Alvo', 'Observações'];
+    const rows = debts.map((d) =>
+      [
+        d.name,
+        d.type ?? '',
+        formatCurrency(d.balance),
+        formatPercent(d.interestRate, d.ratePeriod),
+        d.ratePeriod === 'yearly' ? 'Anual' : 'Mensal',
+        formatDate(d.targetDate),
+        d.notes ?? '',
+      ]
+        .map((v) => `"${v}"`)
+        .join(',')
+    );
+
+    const csv = [headers.join(','), ...rows].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `dividas_${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+
+    toast({ title: 'Exportado com sucesso!' });
+  };
+
   const renderRows = () => {
     if (isLoading) {
       return (
@@ -207,16 +240,22 @@ export default function Debts() {
         title="Painel de Dívidas"
         description="Central único para acompanhar saldos, juros e datas-alvo de quitação."
         actions={
-          <Button
-            size="sm"
-            onClick={() => {
-              setEditingDebt(null);
-              setIsModalOpen(true);
-            }}
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Nova dívida
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={handleExportCSV}>
+              <Download className="mr-2 h-4 w-4" />
+              Exportar
+            </Button>
+            <Button
+              size="sm"
+              onClick={() => {
+                setEditingDebt(null);
+                setIsModalOpen(true);
+              }}
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Nova dívida
+            </Button>
+          </div>
         }
       >
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
