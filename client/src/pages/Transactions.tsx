@@ -23,6 +23,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {
+  AlertCircle,
   Calendar,
   CheckCircle,
   ChevronDown,
@@ -214,6 +215,33 @@ export default function Transactions() {
     const parsed = parse(dateString, 'yyyy-MM-dd', new Date());
     return format(parsed, 'dd/MM/yyyy');
   };
+
+  const isOverdue = (transaction: TransactionWithCategory): boolean => {
+    if (transaction.paid) return false;
+    const transactionDate = new Date(transaction.date);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    transactionDate.setHours(0, 0, 0, 0);
+    return transactionDate < today;
+  };
+
+  const overdueFromPreviousPeriods = useMemo(() => {
+    const periodStart = new Date(startDate);
+    periodStart.setHours(0, 0, 0, 0);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    return allTransactionsUntilPeriod.filter((t) => {
+      if (t.paid) return false;
+      const transactionDate = new Date(t.date);
+      transactionDate.setHours(0, 0, 0, 0);
+      return transactionDate < periodStart && transactionDate < today;
+    });
+  }, [allTransactionsUntilPeriod, startDate]);
+
+  const overdueTotal = useMemo(() => {
+    return overdueFromPreviousPeriods.reduce((sum, t) => sum + parseFloat(t.amount), 0);
+  }, [overdueFromPreviousPeriods]);
 
   const formatCurrentPeriod = () => {
     const [year, month, day] = currentDate.split('-').map(Number);
@@ -482,6 +510,17 @@ export default function Transactions() {
             ))}
           </div>
 
+          {overdueFromPreviousPeriods.length > 0 && (
+            <div className="flex items-center gap-3 rounded-lg border border-red-200 bg-red-50 p-4">
+              <AlertCircle className="h-5 w-5 flex-shrink-0 text-red-600" />
+              <p className="text-sm font-medium text-red-800">
+                Você tem {overdueFromPreviousPeriods.length} conta
+                {overdueFromPreviousPeriods.length > 1 ? 's' : ''} em atraso totalizando{' '}
+                {formatCurrency(overdueTotal)}
+              </p>
+            </div>
+          )}
+
           <Card className="overflow-hidden">
             <CardContent className="p-0">
               {isLoading ? (
@@ -559,11 +598,35 @@ export default function Transactions() {
                           </div>
                           <div className="flex items-center justify-between text-xs text-muted-foreground">
                             <span>{transaction.paymentMethod || 'Método não informado'}</span>
-                            {transaction.installments > 1 && (
-                              <span className="rounded-full bg-muted px-2 py-0.5">
-                                {transaction.currentInstallment}/{transaction.installments}
-                              </span>
-                            )}
+                            <div className="flex items-center gap-2">
+                              {transaction.paid ? (
+                                <div
+                                  className="inline-flex rounded-full bg-green-100 p-1"
+                                  title="Pago"
+                                >
+                                  <CheckCircle className="h-3 w-3 text-green-600" />
+                                </div>
+                              ) : isOverdue(transaction) ? (
+                                <div
+                                  className="inline-flex rounded-full bg-red-100 p-1"
+                                  title="Em atraso"
+                                >
+                                  <AlertCircle className="h-3 w-3 text-red-600" />
+                                </div>
+                              ) : (
+                                <div
+                                  className="inline-flex rounded-full bg-amber-100 p-1"
+                                  title="Pendente"
+                                >
+                                  <Clock className="h-3 w-3 text-amber-600" />
+                                </div>
+                              )}
+                              {transaction.installments > 1 && (
+                                <span className="rounded-full bg-muted px-2 py-0.5">
+                                  {transaction.currentInstallment}/{transaction.installments}
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -653,6 +716,13 @@ export default function Transactions() {
                                   title="Pago"
                                 >
                                   <CheckCircle className="h-4 w-4 text-green-600" />
+                                </div>
+                              ) : isOverdue(transaction) ? (
+                                <div
+                                  className="inline-flex rounded-full bg-red-100 p-1"
+                                  title="Em atraso"
+                                >
+                                  <AlertCircle className="h-4 w-4 text-red-600" />
                                 </div>
                               ) : (
                                 <div
