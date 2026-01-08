@@ -48,12 +48,15 @@ export default function Projects() {
 
   if (currentAccount.type !== 'business') {
     return (
-      <AppShell title="Projetos" description="Gerencie seus projetos e acompanhe o progresso">
-        <EmptyState
-          icon={<Folder className="h-16 w-16 text-slate-400" />}
-          title="Projetos não disponíveis"
-          description="A funcionalidade de projetos está disponível apenas para contas empresariais."
-        />
+      <AppShell>
+        <div className="space-y-6">
+          <h1 className="text-2xl font-bold">Projetos</h1>
+          <EmptyState
+            icon={<Folder className="h-16 w-16 text-slate-400" />}
+            title="Projetos não disponíveis"
+            description="A funcionalidade de projetos está disponível apenas para contas empresariais."
+          />
+        </div>
       </AppShell>
     );
   }
@@ -119,17 +122,17 @@ export default function Projects() {
 
   return (
     <>
-      <AppShell
-        title="Projetos"
-        description="Gerencie seus projetos e acompanhe o progresso"
-        actions={
-          <Button onClick={handleOpenCreateModal}>
-            <Plus className="h-4 w-4 mr-2" />
-            Novo Projeto
-          </Button>
-        }
-      >
-        {isLoading ? (
+      <AppShell>
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <h1 className="text-2xl font-bold">Projetos</h1>
+            <Button onClick={handleOpenCreateModal}>
+              <Plus className="h-4 w-4 mr-2" />
+              Novo Projeto
+            </Button>
+          </div>
+
+          {isLoading ? (
           <EmptyState title="Carregando projetos..." className="border-dashed bg-transparent" />
         ) : projects.length === 0 ? (
           <EmptyState
@@ -203,6 +206,7 @@ export default function Projects() {
             ))}
           </div>
         )}
+        </div>
       </AppShell>
 
       <ProjectModal

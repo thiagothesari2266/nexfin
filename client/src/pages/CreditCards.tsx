@@ -189,29 +189,28 @@ export default function CreditCards() {
 
   return (
     <>
-      <AppShell
-        title="Cartões de Crédito"
-        description="Gerencie limites, faturas e importações com uma visão enxuta."
-        actions={
-          <div className="flex flex-wrap items-center gap-2">
-            <Button
-              variant="outline"
-              onClick={handleProcessInvoices}
-              disabled={processInvoices.isPending}
-            >
-              <RefreshCw
-                className={cn('h-4 w-4 mr-2', processInvoices.isPending && 'animate-spin')}
-              />
-              Processar faturas
-            </Button>
-            <Button onClick={() => setIsCreditCardModalOpen(true)}>
-              <Plus className="mr-2 h-4 w-4" />
-              Novo cartão
-            </Button>
-          </div>
-        }
-      >
+      <AppShell>
         <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <h1 className="text-2xl font-bold">Cartões de Crédito</h1>
+            <div className="flex flex-wrap items-center gap-2">
+              <Button
+                variant="outline"
+                onClick={handleProcessInvoices}
+                disabled={processInvoices.isPending}
+              >
+                <RefreshCw
+                  className={cn('h-4 w-4 mr-2', processInvoices.isPending && 'animate-spin')}
+                />
+                Processar faturas
+              </Button>
+              <Button onClick={() => setIsCreditCardModalOpen(true)}>
+                <Plus className="mr-2 h-4 w-4" />
+                Novo cartão
+              </Button>
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 xl:grid-cols-3">
             {isLoading ? (
               <EmptyState

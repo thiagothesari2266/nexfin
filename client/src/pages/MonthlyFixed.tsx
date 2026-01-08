@@ -160,20 +160,10 @@ export default function MonthlyFixed() {
   };
 
   return (
-    <AppShell
-      title="Fixos mensais"
-      description="Entradas e saídas recorrentes para acompanhar compromissos mensais."
-      actions={
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <Repeat className="h-4 w-4" />
-            <span>Frequência: mensal</span>
-          </div>
-        </div>
-      }
-    >
+    <AppShell>
       <div className="space-y-6">
-        <div className="flex items-center justify-end">
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold">Fixos mensais</h1>
           <Button
             onClick={() => {
               setEditingItem(null);

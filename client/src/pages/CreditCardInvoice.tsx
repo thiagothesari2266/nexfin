@@ -561,8 +561,14 @@ export default function CreditCardInvoice() {
 
   return (
     <>
-      <AppShell title={pageTitle} description={pageDescription} actions={pageActions}>
-        {renderContent()}
+      <AppShell>
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <h1 className="text-2xl font-bold">{pageTitle}</h1>
+            {pageActions}
+          </div>
+          {renderContent()}
+        </div>
       </AppShell>
       <TransactionModal
         isOpen={isTransactionModalOpen}

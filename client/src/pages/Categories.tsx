@@ -107,23 +107,21 @@ export default function Categories() {
 
   return (
     <>
-      <AppShell
-        title="Categorias"
-        description="Defina grupos enxutos para classificar suas receitas e despesas."
-        actions={
-          <Button
-            size="sm"
-            onClick={() => {
-              setEditingCategory(null);
-              setIsCategoryModalOpen(true);
-            }}
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Nova categoria
-          </Button>
-        }
-      >
+      <AppShell>
         <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <h1 className="text-2xl font-bold">Categorias</h1>
+            <Button
+              size="sm"
+              onClick={() => {
+                setEditingCategory(null);
+                setIsCategoryModalOpen(true);
+              }}
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Nova categoria
+            </Button>
+          </div>
           {isLoading ? (
             <EmptyState title="Carregando categorias..." className="border-none bg-transparent" />
           ) : categories.length === 0 ? (

@@ -418,12 +418,13 @@ export default function Transactions() {
 
   return (
     <>
-      <AppShell
-        title="Transações"
-        description="Controle compacto das movimentações e previsões financeiras."
-        actions={headerActions}
-      >
+      <AppShell>
         <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <h1 className="text-2xl font-bold">Transações</h1>
+            {headerActions}
+          </div>
+
           <div className="flex items-center justify-center gap-1 rounded-lg border bg-card/60 px-3 py-2">
             <Button variant="secondary" size="sm" onClick={handleCurrentPeriod}>
               Hoje

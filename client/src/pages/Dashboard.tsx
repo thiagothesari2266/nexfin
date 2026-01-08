@@ -71,37 +71,37 @@ export default function Dashboard() {
 
   return (
     <>
-      <AppShell
-        title="Dashboard"
-        description="Resumo do mês com indicadores essenciais e atalhos compactos."
-        actions={
-          <Button size="sm" onClick={() => setIsTransactionModalOpen(true)}>
-            Nova transação
-          </Button>
-        }
-      >
+      <AppShell>
         <div className="space-y-6">
-          <div className="flex items-center justify-center gap-1 rounded-lg border bg-card/60 px-3 py-2">
-            <Button variant="secondary" size="sm" onClick={handleCurrentMonth}>
-              Hoje
-            </Button>
-            <Button variant="ghost" size="icon" onClick={handlePreviousMonth}>
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="text-sm font-medium px-2">
-                  {formattedMonth}
-                  <ChevronDown className="h-4 w-4 ml-1" />
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <h1 className="text-2xl font-bold">Dashboard</h1>
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1 rounded-lg border bg-card/60 px-2 py-1">
+                <Button variant="secondary" size="sm" onClick={handleCurrentMonth}>
+                  Hoje
                 </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="center">
-                <DropdownMenuItem disabled>Por mês</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-            <Button variant="ghost" size="icon" onClick={handleNextMonth}>
-              <ChevronRight className="h-4 w-4" />
-            </Button>
+                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handlePreviousMonth}>
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="text-sm font-medium px-2 h-8">
+                      {formattedMonth}
+                      <ChevronDown className="h-4 w-4 ml-1" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="center">
+                    <DropdownMenuItem disabled>Por mês</DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleNextMonth}>
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+              <Button size="sm" onClick={() => setIsTransactionModalOpen(true)}>
+                Nova transação
+              </Button>
+            </div>
           </div>
 
           <MetricsCards currentMonth={currentMonth} />

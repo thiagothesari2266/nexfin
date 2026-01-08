@@ -30,15 +30,21 @@ export default function MetricsCards({ currentMonth }: MetricsCardsProps) {
       currency: 'BRL',
     }).format(value || 0);
 
-  const paidTransactions = useMemo(() => transactions.filter((tx) => tx.paid), [transactions]);
+  const monthlyIncome = useMemo(
+    () =>
+      transactions
+        .filter((tx) => tx.type === 'income')
+        .reduce((acc, tx) => acc + (parseFloat(tx.amount) || 0), 0),
+    [transactions]
+  );
 
-  const monthlyIncome = paidTransactions
-    .filter((tx) => tx.type === 'income')
-    .reduce((acc, tx) => acc + (parseFloat(tx.amount) || 0), 0);
-
-  const monthlyExpenses = paidTransactions
-    .filter((tx) => tx.type === 'expense')
-    .reduce((acc, tx) => acc + (parseFloat(tx.amount) || 0), 0);
+  const monthlyExpenses = useMemo(
+    () =>
+      transactions
+        .filter((tx) => tx.type === 'expense')
+        .reduce((acc, tx) => acc + (parseFloat(tx.amount) || 0), 0),
+    [transactions]
+  );
 
   const monthlyNet = monthlyIncome - monthlyExpenses;
 

@@ -176,24 +176,24 @@ export default function Reports() {
   };
 
   return (
-    <AppShell
-      title="Relatórios"
-      description="Análises detalhadas das suas finanças"
-      actions={
-        <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
-          <SelectTrigger className="w-40">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="2025-01">Janeiro 2025</SelectItem>
-            <SelectItem value="2024-12">Dezembro 2024</SelectItem>
-            <SelectItem value="2024-11">Novembro 2024</SelectItem>
-            <SelectItem value="2024-10">Outubro 2024</SelectItem>
-          </SelectContent>
-        </Select>
-      }
-    >
-      <div className="space-y-8">
+    <AppShell>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold">Relatórios</h1>
+          <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
+            <SelectTrigger className="w-40">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="2025-01">Janeiro 2025</SelectItem>
+              <SelectItem value="2024-12">Dezembro 2024</SelectItem>
+              <SelectItem value="2024-11">Novembro 2024</SelectItem>
+              <SelectItem value="2024-10">Outubro 2024</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-8">
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
           <SummaryCard
             label="Receitas do mês"
@@ -313,6 +313,7 @@ export default function Reports() {
             </ResponsiveContainer>
           </CardContent>
         </Card>
+        </div>
       </div>
     </AppShell>
   );

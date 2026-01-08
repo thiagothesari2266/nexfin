@@ -236,78 +236,79 @@ export default function Debts() {
 
   return (
     <>
-      <AppShell
-        title="Painel de Dívidas"
-        description="Central único para acompanhar saldos, juros e datas-alvo de quitação."
-        actions={
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={handleExportCSV}>
-              <Download className="mr-2 h-4 w-4" />
-              Exportar
-            </Button>
-            <Button
-              size="sm"
-              onClick={() => {
-                setEditingDebt(null);
-                setIsModalOpen(true);
-              }}
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              Nova dívida
-            </Button>
-          </div>
-        }
-      >
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-          <SummaryCard
-            label="Saldo total em dívida"
-            value={formatCurrency(totals.totalBalance)}
-            icon={<PiggyBank className="h-10 w-10 text-slate-500" />}
-          />
-          <SummaryCard
-            label="Juros mensais estimados"
-            value={formatCurrency(totals.monthlyInterest)}
-            helperText="Saldo x taxa mensal"
-            icon={<BadgePercent className="h-10 w-10 text-amber-600" />}
-          />
-          <SummaryCard
-            label="Próxima data alvo"
-            value={totals.nextTarget ? formatDate(totals.nextTarget) : 'Sem data'}
-            helperText={
-              totals.nextTarget ? 'Priorize este vencimento' : 'Defina uma data de quitação'
-            }
-            icon={<CalendarDays className="h-10 w-10 text-sky-600" />}
-          />
-        </div>
-
-        <div className="rounded-lg border bg-card/50 shadow-sm">
-          <div className="flex items-center justify-between border-b px-4 py-3">
-            <div>
-              <p className="text-sm font-medium">Dívidas monitoradas</p>
-              <p className="text-xs text-muted-foreground">
-                Valores não movimentam transações, servem apenas para análise.
-              </p>
-            </div>
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <Clock3 className="h-4 w-4" />
-              Atualize sempre que o saldo mudar
+      <AppShell>
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <h1 className="text-2xl font-bold">Painel de Dívidas</h1>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={handleExportCSV}>
+                <Download className="mr-2 h-4 w-4" />
+                Exportar
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => {
+                  setEditingDebt(null);
+                  setIsModalOpen(true);
+                }}
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                Nova dívida
+              </Button>
             </div>
           </div>
 
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Dívida</TableHead>
-                <TableHead>Saldo</TableHead>
-                <TableHead>Juros</TableHead>
-                <TableHead>Juros/mês</TableHead>
-                <TableHead>Período</TableHead>
-                <TableHead>Data alvo</TableHead>
-                <TableHead className="text-right">Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>{renderRows()}</TableBody>
-          </Table>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+            <SummaryCard
+              label="Saldo total em dívida"
+              value={formatCurrency(totals.totalBalance)}
+              icon={<PiggyBank className="h-10 w-10 text-slate-500" />}
+            />
+            <SummaryCard
+              label="Juros mensais estimados"
+              value={formatCurrency(totals.monthlyInterest)}
+              helperText="Saldo x taxa mensal"
+              icon={<BadgePercent className="h-10 w-10 text-amber-600" />}
+            />
+            <SummaryCard
+              label="Próxima data alvo"
+              value={totals.nextTarget ? formatDate(totals.nextTarget) : 'Sem data'}
+              helperText={
+                totals.nextTarget ? 'Priorize este vencimento' : 'Defina uma data de quitação'
+              }
+              icon={<CalendarDays className="h-10 w-10 text-sky-600" />}
+            />
+          </div>
+
+          <div className="rounded-lg border bg-card/50 shadow-sm">
+            <div className="flex items-center justify-between border-b px-4 py-3">
+              <div>
+                <p className="text-sm font-medium">Dívidas monitoradas</p>
+                <p className="text-xs text-muted-foreground">
+                  Valores não movimentam transações, servem apenas para análise.
+                </p>
+              </div>
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <Clock3 className="h-4 w-4" />
+                Atualize sempre que o saldo mudar
+              </div>
+            </div>
+
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Dívida</TableHead>
+                  <TableHead>Saldo</TableHead>
+                  <TableHead>Juros</TableHead>
+                  <TableHead>Juros/mês</TableHead>
+                  <TableHead>Período</TableHead>
+                  <TableHead>Data alvo</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>{renderRows()}</TableBody>
+            </Table>
+          </div>
         </div>
       </AppShell>
 

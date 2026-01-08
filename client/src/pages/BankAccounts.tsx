@@ -72,17 +72,15 @@ export default function BankAccounts() {
 
   return (
     <>
-      <AppShell
-        title="Contas Bancárias"
-        description="Gerencie suas contas bancárias vinculadas"
-        actions={
-          <Button onClick={() => setIsModalOpen(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            Nova Conta Bancária
-          </Button>
-        }
-      >
+      <AppShell>
         <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <h1 className="text-2xl font-bold">Contas Bancárias</h1>
+            <Button onClick={() => setIsModalOpen(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Nova Conta Bancária
+            </Button>
+          </div>
           {isLoading ? (
             <EmptyState
               title="Carregando contas bancárias..."

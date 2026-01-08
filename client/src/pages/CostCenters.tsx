@@ -39,12 +39,15 @@ export default function CostCenters() {
 
   if (currentAccount.type !== 'business') {
     return (
-      <AppShell title="Centros de Custo" description="Gerencie e monitore seus centros de custo">
-        <EmptyState
-          icon={<Building className="h-16 w-16 text-slate-400" />}
-          title="Centros de custo não disponíveis"
-          description="A funcionalidade está disponível apenas para contas empresariais."
-        />
+      <AppShell>
+        <div className="space-y-6">
+          <h1 className="text-2xl font-bold">Centros de Custo</h1>
+          <EmptyState
+            icon={<Building className="h-16 w-16 text-slate-400" />}
+            title="Centros de custo não disponíveis"
+            description="A funcionalidade está disponível apenas para contas empresariais."
+          />
+        </div>
       </AppShell>
     );
   }
@@ -92,17 +95,17 @@ export default function CostCenters() {
 
   return (
     <>
-      <AppShell
-        title="Centros de Custo"
-        description="Gerencie e monitore seus centros de custo"
-        actions={
-          <Button onClick={handleOpenCreateModal}>
-            <Plus className="h-4 w-4 mr-2" />
-            Novo Centro
-          </Button>
-        }
-      >
-        {isLoading ? (
+      <AppShell>
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <h1 className="text-2xl font-bold">Centros de Custo</h1>
+            <Button onClick={handleOpenCreateModal}>
+              <Plus className="h-4 w-4 mr-2" />
+              Novo Centro
+            </Button>
+          </div>
+
+          {isLoading ? (
           <EmptyState
             title="Carregando centros de custo..."
             className="border-dashed bg-transparent"
@@ -183,6 +186,7 @@ export default function CostCenters() {
             ))}
           </div>
         )}
+        </div>
       </AppShell>
 
       <CostCenterModal

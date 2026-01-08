@@ -192,23 +192,21 @@ export default function SettingsPage() {
   }
 
   return (
-    <AppShell
-      title="Configurações"
-      description="Gerencie suas preferências e configurações da conta"
-      actions={
-        <div className="flex flex-wrap gap-2">
-          <Button variant="outline" onClick={handleExportData}>
-            <Download className="h-4 w-4 mr-2" />
-            Exportar dados
-          </Button>
-          <Button onClick={handleSaveAccount} disabled={updateAccountMutation.isPending}>
-            <Save className="h-4 w-4 mr-2" />
-            Salvar alterações
-          </Button>
-        </div>
-      }
-    >
+    <AppShell>
       <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold">Configurações</h1>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" onClick={handleExportData}>
+              <Download className="h-4 w-4 mr-2" />
+              Exportar dados
+            </Button>
+            <Button onClick={handleSaveAccount} disabled={updateAccountMutation.isPending}>
+              <Save className="h-4 w-4 mr-2" />
+              Salvar alterações
+            </Button>
+          </div>
+        </div>
         {/* Account Settings */}
         <Card className="mb-6">
           <CardHeader>
