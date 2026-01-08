@@ -35,13 +35,17 @@
       "mcp__nexfin-postgres__query",
       "mcp__nexfin-postgres-prod__query",
       "Bash(cat:*)",
-      "Bash(ssh nexfin:*)"
+      "Bash(ssh nexfin:*)",
+      "mcp__playwright__browser_navigate",
+      "mcp__playwright__browser_wait_for"
     ],
     "deny": []
   },
+  "enableAllProjectMcpServers": true,
   "enabledMcpjsonServers": [
     "ssh",
     "nexfin-postgres",
-    "nexfin-postgres-prod"
+    "nexfin-postgres-prod",
+    "playwright"
   ]
 }
