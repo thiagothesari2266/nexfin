@@ -118,9 +118,10 @@ export default function MonthlyFixed() {
     },
   });
 
-  const handleSubmit = (data: Omit<InsertFixedCashflow, 'accountId'>) => {
+  const handleSubmit = (data: { description: string; amount: string; type: 'income' | 'expense'; dueDay?: string }) => {
     if (!currentAccount) return;
     const normalizedAmount = normalizeAmountForApi(data.amount);
+    const dueDay = data.dueDay ? parseInt(data.dueDay, 10) : null;
 
     if (editingItem) {
       updateMutation.mutate({
@@ -129,6 +130,7 @@ export default function MonthlyFixed() {
           description: data.description,
           amount: normalizedAmount,
           type: data.type,
+          dueDay,
         },
       });
       return;
@@ -137,6 +139,7 @@ export default function MonthlyFixed() {
     createMutation.mutate({
       ...data,
       amount: normalizedAmount,
+      dueDay,
       accountId: currentAccount.id,
     });
   };
@@ -214,6 +217,7 @@ export default function MonthlyFixed() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Descrição</TableHead>
+                    <TableHead className="text-center">Vencimento</TableHead>
                     <TableHead className="text-right">Valor</TableHead>
                     <TableHead className="w-20 text-right"> </TableHead>
                   </TableRow>
@@ -223,6 +227,9 @@ export default function MonthlyFixed() {
                     <TableRow key={item.id}>
                       <TableCell>
                         <div className="font-medium">{item.description}</div>
+                      </TableCell>
+                      <TableCell className="text-center text-muted-foreground">
+                        {item.dueDay ? `Dia ${item.dueDay}` : '-'}
                       </TableCell>
                       <TableCell className="text-right font-medium text-green-600">
                         {formatCurrency(item.amount)}
@@ -276,6 +283,7 @@ export default function MonthlyFixed() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Descrição</TableHead>
+                    <TableHead className="text-center">Vencimento</TableHead>
                     <TableHead className="text-right">Valor</TableHead>
                     <TableHead className="w-20 text-right"> </TableHead>
                   </TableRow>
@@ -285,6 +293,9 @@ export default function MonthlyFixed() {
                     <TableRow key={item.id}>
                       <TableCell>
                         <div className="font-medium">{item.description}</div>
+                      </TableCell>
+                      <TableCell className="text-center text-muted-foreground">
+                        {item.dueDay ? `Dia ${item.dueDay}` : '-'}
                       </TableCell>
                       <TableCell className="text-right font-medium text-red-600">
                         {formatCurrency(item.amount)}

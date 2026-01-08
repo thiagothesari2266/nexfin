@@ -284,6 +284,7 @@ model FixedCashflow {
   type        CategoryType
   startMonth  String       @map("start_month")
   endMonth    String?      @map("end_month")
+  dueDay      Int?         @map("due_day")
   createdAt   DateTime     @default(now()) @map("created_at")
 
   account Account @relation(fields: [accountId], references: [id])

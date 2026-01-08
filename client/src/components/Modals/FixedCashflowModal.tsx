@@ -33,6 +33,7 @@ const fixedCashflowSchema = z.object({
   description: z.string().min(1, 'Descrição é obrigatória'),
   amount: z.string().min(1, 'Valor é obrigatório'),
   type: z.enum(['income', 'expense']),
+  dueDay: z.string().optional(),
 });
 
 type FixedCashflowForm = z.infer<typeof fixedCashflowSchema>;
@@ -58,6 +59,7 @@ export function FixedCashflowModal({
       description: '',
       amount: '',
       type: 'expense',
+      dueDay: '',
     },
   });
 
@@ -67,12 +69,14 @@ export function FixedCashflowModal({
         description: editing.description,
         amount: editing.amount,
         type: editing.type,
+        dueDay: editing.dueDay?.toString() ?? '',
       });
     } else {
       form.reset({
         description: '',
         amount: '',
         type: 'expense',
+        dueDay: '',
       });
     }
   }, [editing, form, open]);
@@ -103,7 +107,7 @@ export function FixedCashflowModal({
               )}
             />
 
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
               <FormField
                 control={form.control}
                 name="amount"
@@ -137,6 +141,31 @@ export function FixedCashflowModal({
                       <SelectContent>
                         <SelectItem value="income">Receita fixa</SelectItem>
                         <SelectItem value="expense">Despesa fixa</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="dueDay"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Vencimento</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Dia" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => (
+                          <SelectItem key={day} value={day.toString()}>
+                            Dia {day}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                     <FormMessage />

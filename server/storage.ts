@@ -1668,6 +1668,7 @@ export class DatabaseStorage implements IStorage {
         type: entry.type,
         startMonth: entry.startMonth,
         endMonth: entry.endMonth ?? null,
+        dueDay: entry.dueDay ?? null,
       }));
 
     const income = mapped.filter((item) => item.type === 'income');
@@ -1697,6 +1698,7 @@ export class DatabaseStorage implements IStorage {
         ...entry,
         startMonth: entry.startMonth ?? todayMonth,
         endMonth: entry.endMonth ?? null,
+        dueDay: entry.dueDay ?? null,
       },
     });
 
@@ -1707,6 +1709,7 @@ export class DatabaseStorage implements IStorage {
       type: created.type,
       startMonth: created.startMonth,
       endMonth: created.endMonth ?? null,
+      dueDay: created.dueDay ?? null,
     };
   }
 
@@ -1721,6 +1724,7 @@ export class DatabaseStorage implements IStorage {
         ...entry,
         startMonth: entry.startMonth ?? undefined,
         endMonth: entry.endMonth ?? undefined,
+        dueDay: entry.dueDay,
       },
     });
 
@@ -1733,6 +1737,7 @@ export class DatabaseStorage implements IStorage {
       type: updated.type,
       startMonth: updated.startMonth,
       endMonth: updated.endMonth ?? null,
+      dueDay: updated.dueDay ?? null,
     };
   }
 

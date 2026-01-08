@@ -363,6 +363,7 @@ export interface MonthlyFixedItem {
   type: CategoryType;
   startMonth: string;
   endMonth: string | null;
+  dueDay: number | null;
 }
 
 export interface Debt {
@@ -432,6 +433,7 @@ export const insertFixedCashflowSchema = z.object({
     .regex(/^\d{4}-\d{2}$/)
     .optional()
     .nullable(),
+  dueDay: z.number().int().min(1).max(31).optional().nullable(),
   accountId: z.number(),
 });
 export type InsertFixedCashflow = z.infer<typeof insertFixedCashflowSchema>;
