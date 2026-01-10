@@ -93,13 +93,20 @@ const parseDateInput = (value: string): Date => {
 };
 
 const addMonthsPreserveDay = (date: Date, months: number): Date => {
+  const originalDay = date.getDate();
   const newDate = new Date(date);
-  const targetMonth = newDate.getMonth() + months;
-  newDate.setMonth(targetMonth);
+
+  // Primeiro, define o dia para 1 para evitar overflow ao mudar o mês
+  // (ex: 31 de Janeiro + 1 mês sem isso viraria 3 de Março)
+  newDate.setDate(1);
+  newDate.setMonth(newDate.getMonth() + months);
+
+  // Calcula o último dia do mês de destino
   const lastDayOfMonth = new Date(newDate.getFullYear(), newDate.getMonth() + 1, 0).getDate();
-  if (newDate.getDate() !== date.getDate()) {
-    newDate.setDate(Math.min(date.getDate(), lastDayOfMonth));
-  }
+
+  // Define o dia como o mínimo entre o dia original e o último dia do mês
+  newDate.setDate(Math.min(originalDay, lastDayOfMonth));
+
   return newDate;
 };
 
