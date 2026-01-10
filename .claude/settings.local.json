@@ -37,7 +37,15 @@
       "Bash(cat:*)",
       "Bash(ssh nexfin:*)",
       "mcp__playwright__browser_navigate",
-      "mcp__playwright__browser_wait_for"
+      "mcp__playwright__browser_wait_for",
+      "mcp__playwright__browser_click",
+      "mcp__playwright__browser_snapshot",
+      "Bash(npx prisma db push:*)",
+      "Bash(psql:*)",
+      "Bash(PGPASSWORD=\"tmttx22ID\" psql:*)",
+      "Bash(npx prisma generate:*)",
+      "mcp__playwright__browser_type",
+      "Bash(git remote set-url:*)"
     ],
     "deny": []
   },
