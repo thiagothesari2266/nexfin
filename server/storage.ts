@@ -856,11 +856,14 @@ export class DatabaseStorage implements IStorage {
 
   async updateTransaction(
     id: number,
-    transaction: Partial<InsertTransaction>
+    transaction: Partial<InsertTransaction> & { exceptionForDate?: string; editScope?: string }
   ): Promise<Transaction | undefined> {
+    // Remove campos que não são do banco de dados
+    const { exceptionForDate, editScope, ...transactionData } = transaction;
+
     const updatePayload: Prisma.TransactionUpdateInput = {
-      ...transaction,
-      date: transaction.date ? parseDateInput(transaction.date) : undefined,
+      ...transactionData,
+      date: transactionData.date ? parseDateInput(transactionData.date) : undefined,
     };
 
     if ('recurrenceEndDate' in transaction) {
