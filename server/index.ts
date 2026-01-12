@@ -31,7 +31,7 @@ app.use(
     cookie: {
       maxAge: 1000 * 60 * 60 * 24 * 7, // 7 dias
       sameSite: 'lax',
-      secure: process.env.NODE_ENV === 'production',
+      secure: process.env.COOKIE_SECURE !== 'false', // false para Cloudflare Flexible
     },
   })
 );
