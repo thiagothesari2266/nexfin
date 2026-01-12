@@ -1,5 +1,6 @@
 import { type MouseEvent, useEffect, useMemo, useState } from 'react';
 import { addMonths, endOfMonth, format, parse, startOfMonth, subMonths } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import { useAccount } from '@/contexts/AccountContext';
 import { useTransactions } from '@/hooks/useTransactions';
 import { AppShell } from '@/components/Layout/AppShell';
@@ -214,6 +215,24 @@ export default function Transactions() {
     if (!dateString) return '';
     const parsed = parse(dateString, 'yyyy-MM-dd', new Date());
     return format(parsed, 'dd/MM/yyyy');
+  };
+
+  // Retorna o mês original se a transação foi movida de outro mês
+  const getOriginalMonth = (transaction: TransactionWithCategory): string | null => {
+    const originalDate = transaction.exceptionForDate || transaction.virtualDate;
+    if (!originalDate) return null;
+
+    const currentDate = parse(transaction.date, 'yyyy-MM-dd', new Date());
+    const origDate = parse(originalDate.split('T')[0], 'yyyy-MM-dd', new Date());
+
+    // Se o mês/ano for diferente, retorna o nome do mês original
+    if (
+      currentDate.getMonth() !== origDate.getMonth() ||
+      currentDate.getFullYear() !== origDate.getFullYear()
+    ) {
+      return format(origDate, 'MMM', { locale: ptBR }).replace('.', '');
+    }
+    return null;
   };
 
   const isOverdue = (transaction: TransactionWithCategory): boolean => {
@@ -593,6 +612,11 @@ export default function Transactions() {
                               </p>
                               <p className="text-xs text-muted-foreground">
                                 {formatDate(transaction.date)}
+                                {getOriginalMonth(transaction) && (
+                                  <span className="ml-1 text-blue-600">
+                                    ({getOriginalMonth(transaction)})
+                                  </span>
+                                )}
                               </p>
                             </div>
                           </div>
@@ -695,6 +719,14 @@ export default function Transactions() {
                               <div className="flex items-center gap-2 text-muted-foreground">
                                 <Calendar className="h-4 w-4" />
                                 {formatDate(transaction.date)}
+                                {getOriginalMonth(transaction) && (
+                                  <span
+                                    className="text-xs text-blue-600"
+                                    title={`Originalmente de ${getOriginalMonth(transaction)}`}
+                                  >
+                                    ({getOriginalMonth(transaction)})
+                                  </span>
+                                )}
                               </div>
                             </TableCell>
                             <TableCell className="text-muted-foreground">
