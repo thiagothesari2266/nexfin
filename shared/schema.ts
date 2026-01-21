@@ -51,6 +51,8 @@ export type LoginInput = z.infer<typeof loginSchema>;
 
 export const createInviteSchema = z.object({
   email: z.string().email(),
+  maxPersonalAccounts: z.number().int().min(0).default(1),
+  maxBusinessAccounts: z.number().int().min(0).default(0),
 });
 export type CreateInvite = z.infer<typeof createInviteSchema>;
 
@@ -211,6 +213,8 @@ export interface AuthenticatedUser {
   id: number;
   email: string;
   role: UserRole;
+  maxPersonalAccounts: number;
+  maxBusinessAccounts: number;
   createdAt: string;
 }
 
@@ -220,6 +224,8 @@ export interface Invite {
   token: string;
   status: InviteStatus;
   createdById: number;
+  maxPersonalAccounts: number;
+  maxBusinessAccounts: number;
   expiresAt: string;
   createdAt: string;
   acceptedAt: string | null;
@@ -229,6 +235,7 @@ export interface Account {
   id: number;
   name: string;
   type: AccountType;
+  userId: number;
   createdAt: string;
 }
 
@@ -472,3 +479,17 @@ export const insertFixedCashflowSchema = z.object({
   accountId: z.number(),
 });
 export type InsertFixedCashflow = z.infer<typeof insertFixedCashflowSchema>;
+
+// Schema para atualização de usuário (admin)
+export const updateUserSchema = z.object({
+  role: userRoleEnum.optional(),
+  maxPersonalAccounts: z.number().int().min(0).optional(),
+  maxBusinessAccounts: z.number().int().min(0).optional(),
+});
+export type UpdateUser = z.infer<typeof updateUserSchema>;
+
+// Tipo estendido para listagem admin de usuários
+export interface AdminUserView extends AuthenticatedUser {
+  accountsCount: { personal: number; business: number };
+  updatedAt: string;
+}

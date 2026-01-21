@@ -22,6 +22,7 @@ import Debts from '@/pages/Debts';
 import FloatingChatButton from '@/components/Chat/FloatingChatButton';
 import LoginPage from '@/pages/Login';
 import AdminInvites from '@/pages/AdminInvites';
+import AdminUsers from '@/pages/AdminUsers';
 
 function AuthenticatedRoutes() {
   const { accounts, isLoading } = useAccount();
@@ -79,6 +80,7 @@ function AdminRoutes() {
   return (
     <Switch>
       <Route path="/admin/invites" component={AdminInvites} />
+      <Route path="/admin/users" component={AdminUsers} />
       <Route>
         <Redirect to="/admin/invites" />
       </Route>

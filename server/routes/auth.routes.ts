@@ -2,7 +2,7 @@ import type { Express } from 'express';
 import bcrypt from 'bcryptjs';
 import { z } from 'zod';
 import { storage } from '../storage';
-import { registerWithInviteSchema, loginSchema, createInviteSchema } from '@shared/schema';
+import { registerWithInviteSchema, loginSchema, createInviteSchema, updateUserSchema } from '@shared/schema';
 import { sendInviteEmail } from '../services/email.service';
 
 const normalizeEmail = (email: string) => email.trim().toLowerCase();
@@ -40,8 +40,8 @@ export function registerAuthRoutes(app: Express) {
         return res.status(409).json({ message: 'Usuário já cadastrado' });
       }
 
-      // Criar usuário e marcar convite como aceito
-      const user = await storage.createUserWithRole(payload.email, payload.password, 'user');
+      // Criar usuário com limites do convite e marcar convite como aceito
+      const user = await storage.createUserFromInvite(payload.email, payload.password, invite);
       await storage.acceptInvite(payload.inviteToken);
 
       req.session.userId = user.id;
@@ -162,6 +162,8 @@ export function registerAuthRoutes(app: Express) {
     try {
       const payload = createInviteSchema.parse({
         email: normalizeEmail(String(req.body.email ?? '')),
+        maxPersonalAccounts: req.body.maxPersonalAccounts ?? 1,
+        maxBusinessAccounts: req.body.maxBusinessAccounts ?? 0,
       });
 
       // Verificar se já existe usuário com esse email
@@ -176,7 +178,12 @@ export function registerAuthRoutes(app: Express) {
         return res.status(409).json({ message: 'Já existe um convite pendente para esse email' });
       }
 
-      const invite = await storage.createInvite(payload.email, req.session!.userId as number);
+      const invite = await storage.createInvite(
+        payload.email,
+        req.session!.userId as number,
+        payload.maxPersonalAccounts,
+        payload.maxBusinessAccounts
+      );
 
       // Enviar email de convite
       const emailResult = await sendInviteEmail(payload.email, invite.token);
@@ -219,6 +226,89 @@ export function registerAuthRoutes(app: Express) {
     } catch (error) {
       console.error('[DELETE /api/admin/invites/:id]', error);
       res.status(500).json({ message: 'Falha ao deletar convite' });
+    }
+  });
+
+  // ========== USER MANAGEMENT ROUTES ==========
+
+  // Listar todos os usuários (apenas admin)
+  app.get('/api/admin/users', requireAdmin, async (_req, res) => {
+    try {
+      const users = await storage.getAllUsers();
+      res.json(users);
+    } catch (error) {
+      console.error('[GET /api/admin/users]', error);
+      res.status(500).json({ message: 'Falha ao listar usuários' });
+    }
+  });
+
+  // Atualizar usuário (apenas admin)
+  app.patch('/api/admin/users/:id', requireAdmin, async (req, res) => {
+    try {
+      const id = Number.parseInt(req.params.id, 10);
+      if (Number.isNaN(id)) {
+        return res.status(400).json({ message: 'ID inválido' });
+      }
+
+      const payload = updateUserSchema.parse(req.body);
+
+      // Verificar se está tentando rebaixar o último admin
+      if (payload.role === 'user') {
+        const currentUser = await storage.getUserById(id);
+        if (currentUser?.role === 'admin') {
+          const adminCount = await storage.countAdminUsers();
+          if (adminCount <= 1) {
+            return res.status(400).json({
+              message: 'Não é possível rebaixar o único administrador do sistema'
+            });
+          }
+        }
+      }
+
+      const updated = await storage.updateUser(id, payload);
+      if (!updated) {
+        return res.status(404).json({ message: 'Usuário não encontrado' });
+      }
+
+      res.json(updated);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: 'Dados inválidos', errors: error.errors });
+      }
+      console.error('[PATCH /api/admin/users/:id]', error);
+      res.status(500).json({ message: 'Falha ao atualizar usuário' });
+    }
+  });
+
+  // Deletar usuário (apenas admin)
+  app.delete('/api/admin/users/:id', requireAdmin, async (req, res) => {
+    try {
+      const id = Number.parseInt(req.params.id, 10);
+      if (Number.isNaN(id)) {
+        return res.status(400).json({ message: 'ID inválido' });
+      }
+
+      // Verificar se está tentando deletar a própria conta
+      if (req.session?.userId === id) {
+        return res.status(400).json({ message: 'Não é possível deletar sua própria conta' });
+      }
+
+      // Verificar se está tentando deletar o último admin
+      const userToDelete = await storage.getUserById(id);
+      if (userToDelete?.role === 'admin') {
+        const adminCount = await storage.countAdminUsers();
+        if (adminCount <= 1) {
+          return res.status(400).json({
+            message: 'Não é possível deletar o único administrador do sistema'
+          });
+        }
+      }
+
+      await storage.deleteUser(id);
+      res.status(204).send();
+    } catch (error) {
+      console.error('[DELETE /api/admin/users/:id]', error);
+      res.status(500).json({ message: 'Falha ao deletar usuário' });
     }
   });
 }

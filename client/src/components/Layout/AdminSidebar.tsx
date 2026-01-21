@@ -1,7 +1,7 @@
 import { Link, useLocation } from 'wouter';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
-import { Users, LogOut } from 'lucide-react';
+import { Users, UserCog, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface AdminSidebarProps {
@@ -11,6 +11,7 @@ interface AdminSidebarProps {
 
 const adminNavItems = [
   { label: 'Gerenciar Convites', href: '/admin/invites', icon: Users },
+  { label: 'Gerenciar Usuários', href: '/admin/users', icon: UserCog },
 ];
 
 export default function AdminSidebar({ isOpen = false, onClose }: AdminSidebarProps) {

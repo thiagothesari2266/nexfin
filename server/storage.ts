@@ -148,6 +148,7 @@ const mapAccount = (account: PrismaAccount): Account => ({
   id: account.id,
   name: account.name,
   type: account.type,
+  userId: account.userId,
   createdAt: ensureDateTimeString(account.createdAt) ?? new Date().toISOString(),
 });
 
@@ -313,6 +314,8 @@ const mapUser = (user: PrismaUser): AuthenticatedUser => ({
   id: user.id,
   email: user.email,
   role: user.role,
+  maxPersonalAccounts: user.maxPersonalAccounts,
+  maxBusinessAccounts: user.maxBusinessAccounts,
   createdAt: ensureDateTimeString(user.createdAt) ?? new Date().toISOString(),
 });
 
@@ -327,6 +330,8 @@ const mapInvite = (invite: PrismaInvite): Invite => ({
   token: invite.token,
   status: invite.status,
   createdById: invite.createdById,
+  maxPersonalAccounts: invite.maxPersonalAccounts,
+  maxBusinessAccounts: invite.maxBusinessAccounts,
   expiresAt: ensureDateTimeString(invite.expiresAt) ?? '',
   createdAt: ensureDateTimeString(invite.createdAt) ?? '',
   acceptedAt: ensureDateTimeString(invite.acceptedAt),
@@ -341,11 +346,12 @@ const sumTransactions = (transactions: Transaction[], type: 'income' | 'expense'
 const PASSWORD_SALT_ROUNDS = 10;
 
 export interface IStorage {
-  createAccount(account: InsertAccount): Promise<Account>;
-  getAccounts(): Promise<Account[]>;
+  createAccount(account: InsertAccount, userId: number): Promise<Account>;
+  getAccounts(userId: number): Promise<Account[]>;
   getAccount(id: number): Promise<Account | undefined>;
   updateAccount(id: number, account: Partial<InsertAccount>): Promise<Account | undefined>;
   deleteAccount(id: number): Promise<void>;
+  getUserAccountCounts(userId: number): Promise<{ personal: number; business: number }>;
 
   createCategory(category: InsertCategory): Promise<Category>;
   getCategories(accountId: number): Promise<Category[]>;
@@ -490,22 +496,50 @@ export interface IStorage {
 
 export class DatabaseStorage implements IStorage {
   // Account methods
-  async createAccount(insertAccount: InsertAccount): Promise<Account> {
+  async createAccount(insertAccount: InsertAccount, userId: number): Promise<Account> {
+    // Buscar usuário e contagem de contas
+    const [user, counts] = await Promise.all([
+      prisma.user.findUnique({ where: { id: userId } }),
+      this.getUserAccountCounts(userId),
+    ]);
+
+    if (!user) throw new Error('Usuário não encontrado');
+
+    // Validar limite
+    if (insertAccount.type === 'personal' && counts.personal >= user.maxPersonalAccounts) {
+      throw new Error(`Limite de contas pessoais atingido (${user.maxPersonalAccounts})`);
+    }
+    if (insertAccount.type === 'business' && counts.business >= user.maxBusinessAccounts) {
+      throw new Error(`Limite de contas empresariais atingido (${user.maxBusinessAccounts})`);
+    }
+
     const account = await prisma.account.create({
-      data: insertAccount,
+      data: {
+        ...insertAccount,
+        userId,
+      },
     });
 
     await this.createDefaultCategories(account.id, account.type);
     return mapAccount(account);
   }
 
-  async getAccounts(): Promise<Account[]> {
+  async getAccounts(userId: number): Promise<Account[]> {
     const result = await prisma.account.findMany({
+      where: { userId },
       orderBy: {
         createdAt: 'desc',
       },
     });
     return result.map(mapAccount);
+  }
+
+  async getUserAccountCounts(userId: number): Promise<{ personal: number; business: number }> {
+    const [personal, business] = await Promise.all([
+      prisma.account.count({ where: { userId, type: 'personal' } }),
+      prisma.account.count({ where: { userId, type: 'business' } }),
+    ]);
+    return { personal, business };
   }
 
   async getAccount(id: number): Promise<Account | undefined> {
@@ -2269,7 +2303,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Invite methods
-  async createInvite(email: string, createdById: number): Promise<Invite> {
+  async createInvite(
+    email: string,
+    createdById: number,
+    maxPersonalAccounts = 1,
+    maxBusinessAccounts = 0
+  ): Promise<Invite> {
     const token = randomUUID();
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 7); // Expira em 7 dias
@@ -2280,6 +2319,8 @@ export class DatabaseStorage implements IStorage {
         token,
         createdById,
         expiresAt,
+        maxPersonalAccounts,
+        maxBusinessAccounts,
       },
     });
 
@@ -2334,6 +2375,129 @@ export class DatabaseStorage implements IStorage {
       },
     });
     return mapUser(user);
+  }
+
+  async createUserFromInvite(
+    email: string,
+    password: string,
+    invite: Invite
+  ): Promise<AuthenticatedUser> {
+    const passwordHash = await bcrypt.hash(password, PASSWORD_SALT_ROUNDS);
+    const user = await prisma.user.create({
+      data: {
+        email,
+        passwordHash,
+        maxPersonalAccounts: invite.maxPersonalAccounts,
+        maxBusinessAccounts: invite.maxBusinessAccounts,
+      },
+    });
+    return mapUser(user);
+  }
+
+  // Admin user management methods
+  async getAllUsers(): Promise<
+    Array<{
+      id: number;
+      email: string;
+      role: string;
+      maxPersonalAccounts: number;
+      maxBusinessAccounts: number;
+      createdAt: string;
+      updatedAt: string;
+      accountsCount: { personal: number; business: number };
+    }>
+  > {
+    const users = await prisma.user.findMany({
+      orderBy: { createdAt: 'desc' },
+      include: {
+        _count: {
+          select: { accounts: true },
+        },
+        accounts: {
+          select: { type: true },
+        },
+      },
+    });
+
+    return users.map((user) => {
+      const personalCount = user.accounts.filter((a) => a.type === 'personal').length;
+      const businessCount = user.accounts.filter((a) => a.type === 'business').length;
+
+      return {
+        id: user.id,
+        email: user.email,
+        role: user.role,
+        maxPersonalAccounts: user.maxPersonalAccounts,
+        maxBusinessAccounts: user.maxBusinessAccounts,
+        createdAt: ensureDateTimeString(user.createdAt) ?? new Date().toISOString(),
+        updatedAt: ensureDateTimeString(user.updatedAt) ?? new Date().toISOString(),
+        accountsCount: {
+          personal: personalCount,
+          business: businessCount,
+        },
+      };
+    });
+  }
+
+  async updateUser(
+    id: number,
+    data: { role?: string; maxPersonalAccounts?: number; maxBusinessAccounts?: number }
+  ): Promise<AuthenticatedUser | undefined> {
+    try {
+      const updated = await prisma.user.update({
+        where: { id },
+        data: {
+          role: data.role as 'admin' | 'user' | undefined,
+          maxPersonalAccounts: data.maxPersonalAccounts,
+          maxBusinessAccounts: data.maxBusinessAccounts,
+        },
+      });
+      return mapUser(updated);
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
+        return undefined;
+      }
+      throw error;
+    }
+  }
+
+  async deleteUser(id: number): Promise<void> {
+    await prisma.$transaction(async (tx) => {
+      // Buscar todas as contas do usuário
+      const accounts = await tx.account.findMany({
+        where: { userId: id },
+        select: { id: true },
+      });
+
+      const accountIds = accounts.map((a) => a.id);
+
+      if (accountIds.length > 0) {
+        // Deletar dados de todas as contas
+        await tx.invoiceImport.deleteMany({ where: { accountId: { in: accountIds } } });
+        await tx.invoicePayment.deleteMany({ where: { accountId: { in: accountIds } } });
+        await tx.creditCardTransaction.deleteMany({ where: { accountId: { in: accountIds } } });
+        await tx.transaction.deleteMany({ where: { accountId: { in: accountIds } } });
+        await tx.category.deleteMany({ where: { accountId: { in: accountIds } } });
+        await tx.creditCard.deleteMany({ where: { accountId: { in: accountIds } } });
+        await tx.bankAccount.deleteMany({ where: { accountId: { in: accountIds } } });
+        await tx.debt.deleteMany({ where: { accountId: { in: accountIds } } });
+        await tx.fixedCashflow.deleteMany({ where: { accountId: { in: accountIds } } });
+        await tx.project.deleteMany({ where: { accountId: { in: accountIds } } });
+        await tx.costCenter.deleteMany({ where: { accountId: { in: accountIds } } });
+        await tx.client.deleteMany({ where: { accountId: { in: accountIds } } });
+        await tx.account.deleteMany({ where: { userId: id } });
+      }
+
+      // Deletar convites criados pelo usuário
+      await tx.invite.deleteMany({ where: { createdById: id } });
+
+      // Deletar o usuário
+      await tx.user.delete({ where: { id } });
+    });
+  }
+
+  async countAdminUsers(): Promise<number> {
+    return prisma.user.count({ where: { role: 'admin' } });
   }
 }
 
